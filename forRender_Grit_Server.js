@@ -5,7 +5,7 @@ app.use(express.json());
 
 // Browser sanity check
 app.get("/GurusTokenHook", (req, res) => {
-  res.send("GurusTokenHook is up");
+  res.status(200).send("GurusTokenHook is up");
 });
 const patients = [
   {
@@ -21,44 +21,77 @@ const patients = [
 
 app.post("/GurusTokenHook", (request, response) => {
 
-  const auth = req.headers["authorization"];
+  try {
 
-  if (auth !== "my-inline-hook-secret") {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  
-  console.log(" ");
-  console.log(request.body.data.identity.claims["preferred_username"]);
+    const auth = request.headers["authorization"];
 
-  var patientName = request.body.data.identity.claims["preferred_username"];
-  if (patients.some(user => user.username == patientName)){
-    const arrayPosition = patients.findIndex(user => user.username == patientName);
-    const patientID = patients[arrayPosition].ExternalServicePatientID;
-    var returnValue = { "commands":[
-                          { "type":"com.okta.identity.patch",
-                            "value": [
-                                {
-                                  "op": "add",
-                                  "path": "/claims/extPatientId",
-                                  "value": patientID
-                                }
-                                ]
+    if (auth !== "my-inline-hook-secret") {
+      return response.status(401).json({ error: "Unauthorized" });
+    }
 
-                          }
-                                  ],
-                    }
-  console.log("Added claim to ID Token, with a value of: " + returnValue.commands[0].value[0]["value"]);
-  response.send(JSON.stringify(returnValue));
+    console.log(" ");
+
+    const patientName = request.body?.data?.identity?.claims?.preferred_username;
+
+    console.log(patientName);
+
+    if (!patientName) {
+      console.log("preferred_username missing in payload");
+      return response.status(200).json({ commands: [] });
+    }
+
+    if (patients.some(user => user.username === patientName)) {
+
+      const arrayPosition =
+        patients.findIndex(user => user.username === patientName);
+
+      const patientID =
+        patients[arrayPosition].ExternalServicePatientID;
+
+      const returnValue = {
+        commands: [
+          {
+            type: "com.okta.identity.patch",
+            value: [
+              {
+                op: "add",
+                path: "/claims/extPatientId",
+                value: patientID
+              }
+            ]
+          }
+        ]
+      };
+
+      console.log(
+        "Added claim to ID Token with value: " + patientID
+      );
+
+      return response.status(200).json(returnValue);
+
+    } else {
+
+      console.log("Not part of patient data store");
+
+      return response.status(200).json({
+        commands: []
+      });
+    }
+
+  } catch (err) {
+
+    console.error("Hook error:", err);
+
+    return response.status(200).json({
+      commands: []
+    });
   }
-  else {
-  console.log("Not part of patient data store");
-  response.status(204).send();
-  }
-}
-);
+
+});
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
 
 
