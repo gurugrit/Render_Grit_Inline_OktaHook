@@ -1,11 +1,12 @@
 {
   "name": "okta-token-hook",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "forRender_Grit_Server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.21.2"
   }
+
 }
