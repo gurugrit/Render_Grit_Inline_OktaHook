@@ -20,8 +20,16 @@ const patients = [
 //Token Inline Hook POST from Okta (endpoint: tokenHook)
 
 app.post("/GurusTokenHook", (request, response) => {
+
+  const auth = req.headers["authorization"];
+
+  if (auth !== "my-inline-hook-secret") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  
   console.log(" ");
   console.log(request.body.data.identity.claims["preferred_username"]);
+
   var patientName = request.body.data.identity.claims["preferred_username"];
   if (patients.some(user => user.username == patientName)){
     const arrayPosition = patients.findIndex(user => user.username == patientName);
@@ -52,4 +60,5 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
 
