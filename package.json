@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "main": "forRender_Grit_Server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node forRender_Grit_Server.js"
   },
   "dependencies": {
     "express": "^4.21.2"
   }
 
 }
+
